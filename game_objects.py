@@ -17,31 +17,27 @@ class GameWindow:
     BG_COLOR:tuple = (255,255,255)
     screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 
+
 @dataclass
 class UnitCell:
     """
     A single cell that can be used both as food and snake's body
     """
-    x_cord:int
-    y_cord:int
+    x:int
+    y:int
     size:int
     color:tuple = (0,0,255)
-    # TODO shape:str = 'rectangle'
 
     def __post_init__(self):
-        self.position = [self.x_cord,self.y_cord]
-        #TODO
-        # if self.shape == 'rectangle':
-        #     self.shape = pygame.Rect(self.x_cord, self.y_cord,5,5)
-        # elif self.shape == 'circle':
-        #     pass
+        self.position = [self.x, self.y]
+
 
 class Food(UnitCell):
     """
     Food extends UnitCell and positions on the game window randomly
     """
     def __init__(self,x,y,size = 5,food_color=(255,0,0)):
-        super().__init__(x_cord=x, y_cord=y, size = size, color=food_color)
+        super().__init__(x=x, y=y, size = size, color=food_color)
 
 @dataclass
 class Snake:
@@ -61,20 +57,32 @@ class Snake:
         self.body = []
         self.tail = None
         self.old_tail = None
-        self.head = self.make_new_cell(x_cord=self.starting_position[0],
-                            y_cord=self.starting_position[1])
+        self.head = self.make_new_cell(x=self.starting_position[0],
+                            y=self.starting_position[1])
         
         self.body.append(self.head) #last cell in body is always head
         #define all four boundaries relative to the center coordinates of sneak's cell
 
-    def make_new_cell(self, x_cord, y_cord, size=None, color=None):
+    def make_new_cell(self, x, y, size=None, color=None):
         if size == None: size = self.cell_size
         if color == None: color = self.color
-        new_cell = UnitCell(x_cord=x_cord,
-                                y_cord=y_cord,
+        new_cell = UnitCell(x=x,
+                                y=y,
                                 size=size,
                                 color=color)
         return new_cell
+
+    def add_new_cell_to_head(self,cell:UnitCell):
+        """
+        Increase the size of the snake by adding cells
+        """
+        self.body.append(cell)
+        self.update_head()
+
+
+    def update_head(self):
+        self.head = self.body[-1]
+
 
     def move(self, direction):
         self.moving_direction = direction
@@ -90,11 +98,11 @@ class Snake:
         if direction == "down":
             new_y+= self.velocity
         #make and add new head and remove tail from body
-        new_head = self.make_new_cell(x_cord=new_x, y_cord=new_y,)
+        new_head = self.make_new_cell(x=new_x, y=new_y,)
         self.body.append(new_head)
         self.old_tail = self.body.pop(0)
         self.tail = self.body[0]
-        self.head = self.body[-1]
+        self.update_head()
 
     def reset(self):
         """

@@ -1,11 +1,11 @@
 #game rules are defined and checked  in this module
 
 from dataclasses import dataclass
+from math import hypot
 
 @dataclass
 class GameRules:
     snake:object
-    food:object
     window:object
 
     def __post_init__(self):
@@ -19,14 +19,13 @@ class GameRules:
         Check if snake's head has hit any of the four walls
         """
         snake = self.snake
-        food = self.food
-        if snake.moving_direction == "left" and snake.head.x_cord < self.boundaries["left"]:
+        if snake.moving_direction == "left" and snake.head.x < self.boundaries["left"]:
             return True
-        if snake.moving_direction == "right" and snake.head.x_cord > self.boundaries["right"]:
+        if snake.moving_direction == "right" and snake.head.x > self.boundaries["right"]:
             return True
-        if snake.moving_direction == "up" and snake.head.y_cord < self.boundaries["up"]:
+        if snake.moving_direction == "up" and snake.head.y < self.boundaries["up"]:
             return True
-        if snake.moving_direction == "down" and snake.head.y_cord > self.boundaries["down"]:
+        if snake.moving_direction == "down" and snake.head.y > self.boundaries["down"]:
             return True
 
         return False
@@ -37,9 +36,15 @@ class GameRules:
         """
         pass
 
-    def eaten_food(self):
+    def eaten_food(self,food):
         """
         check if head touched the food
         """
-        pass
+        snake = self.snake
+        #find the distance btw snake's head center and center of food
+        distance = hypot(snake.head.x-food.x, snake.head.y-food.y)
+        if distance < (food.size + snake.cell_size):
+            print('head touched food')
+            return food
+        return False
 

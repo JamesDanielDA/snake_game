@@ -7,6 +7,7 @@ import asyncio
 from game_objects import Snake, Food, GameWindow
 from game_rules import GameRules
 
+
 @dataclass
 class GameController:
     """
@@ -14,6 +15,7 @@ class GameController:
     """
     input_queue:list = field(default_factory=list)
     input_listener_delay:float = .01
+    food_handler_delay:float = 1
     mainloop_delay:float = .05
     running:bool = True
 
@@ -30,11 +32,10 @@ class GameController:
         #create random food
         self.randx = lambda:random.randint(0, self.window.SCREEN_WIDTH)
         self.randy = lambda:random.randint(0, self.window.SCREEN_HEIGHT)
-        self.food = Food(x=self.randx(), y=self.randy())
+        #self.food = Food(x=self.randx(), y=self.randy())
 
         #create gamerules object
         self.gamerules = GameRules(snake=self.snake,
-                                    food=self.food,
                                     window=self.window)
 
         self.tkwindow = Tk().wm_withdraw()
@@ -58,7 +59,6 @@ class GameController:
         else:
             self.quit_game()
 
-
     def check_for_rule_violation(self):
         """
         After each move of snake check if any of the rules is violated
@@ -68,7 +68,7 @@ class GameController:
             return "Snake hit on the Wall!"
 
         return None
-            
+
 
     async def input_listener(self):
         """
@@ -84,11 +84,22 @@ class GameController:
                     print(f'commands pending - {self.input_queue}')
             await asyncio.sleep(self.input_listener_delay)
 
+    def throw_food(self,old_food=None):
+        """ 
+        this function throws a food each time snake eats one
+        """
+        if old_food:
+            pygame.draw.circle(self.screen, self.window.BG_COLOR, old_food.position, old_food.size)
+        self.food = Food(x=self.randx(), y=self.randy())
+        pygame.draw.circle(self.screen, self.food.color, self.food.position, self.food.size)
+        #pygame.display.update()
+
     async def mainloop(self):
         
         # Fill the background with white
         self.screen.fill(self.window.BG_COLOR)
         command = pygame.K_RIGHT #default command
+        self.throw_food()
 
         while self.running:
             if 'quit' in self.input_queue:
@@ -111,16 +122,18 @@ class GameController:
             #draw all the current cells of snake's body
             for cell in self.snake.body:
                 pygame.draw.circle(self.screen, cell.color, cell.position, cell.size)
-            
-            #throw a random food on the screen
-            food = Food(x=self.randx(), y=self.randy())
-            #pygame.draw.circle(self.screen, food.color, food.position, food.size)
             pygame.display.update()
 
             # After this move, check if all the rules have been met
             violation = self.check_for_rule_violation()
             if violation != None:
                 self.should_continue(msg=violation)
+                self.throw_food()
 
+            #Check if snake has eaten
+            eaten_food = self.gamerules.eaten_food(self.food)
+            if eaten_food:
+                self.snake.add_new_cell_to_head(eaten_food)
+                self.throw_food(old_food=eaten_food)
 
             await asyncio.sleep(self.mainloop_delay)
