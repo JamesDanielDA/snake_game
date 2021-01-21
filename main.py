@@ -1,5 +1,15 @@
-import game_window
+import game_controller
+import asyncio
 
 
-game =  game_window.GameWindow()
-game.mainloop()
+
+async def main():
+    game =  game_controller.GameController()
+    task1 = asyncio.create_task(game.input_listener())
+    task2 = asyncio.create_task(game.mainloop())
+    
+    await task1
+    await task2
+
+if __name__ == "__main__":
+    asyncio.run(main())
