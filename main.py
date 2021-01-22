@@ -5,7 +5,7 @@ import asyncio
 
 async def main():
     game =  game_controller.GameController()
-    task1 = asyncio.create_task(game.input_listener())
+    task1 = asyncio.create_task(game.input_handler())
     task2 = asyncio.create_task(game.mainloop())
     
     await task1

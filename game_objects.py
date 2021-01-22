@@ -9,13 +9,42 @@ from time import sleep
 class GameWindow:
     """
     Create an object of this class to put a snake
-    The look and feel of the game is decided by this class
+    The look and feel of the game window is decided by this class
     """
     
     SCREEN_WIDTH:int = 500
     SCREEN_HEIGHT:int = 500
     BG_COLOR:tuple = (255,255,255)
     screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
+
+    pygame.font.init()
+    msg_font = pygame.font.SysFont("Comic Sans MS", 20)
+    score_font = pygame.font.SysFont('Raleway', 20, bold=True)
+    
+    def display_text(self, text, position = None, color=None , font_type=None):
+        """
+        call this funtion to write a text on the game window
+        """
+        if position == None:
+            position = (self.SCREEN_WIDTH/4, self.SCREEN_HEIGHT/4)
+        if color == None:
+            color = (100,100,100)
+        if font_type == None:
+            font_type = self.msg_font
+        
+        label = font_type.render(text, 1, color)
+        self.screen.blit(label, position)
+
+    def display_score(self,score):
+        """
+        A simple text displayed on any one corner of the game window
+        """
+        x = self.SCREEN_WIDTH - 100
+        y = 10
+        position = (x,y)
+        score_text = 'Score : ' + str(score)
+        self.display_text(score_text, position=position,font_type = self.score_font)
+
 
 
 @dataclass
@@ -30,6 +59,8 @@ class UnitCell:
 
     def __post_init__(self):
         self.position = [self.x, self.y]
+        self.rect = pygame.Rect((self.position ), (self.size*2, self.size*2))
+        self.rect.center = (self.position )
 
 
 class Food(UnitCell):
@@ -43,40 +74,39 @@ class Food(UnitCell):
 class Snake:
     """
     Object of class Snake can be created and put on a pygame window
-    Snake will keep a record of its own body parts in relationship with window coordinates
-    pygame captures keystrokes from the player and passes it to Snake which in turn decides all the manouvers 
+    Snake is made up of new cells (UnitCell) and stored in an array
     """
     starting_position:tuple
     cell_size:int=5
     moving_direction:str = 'right'
-    velocity:int=5
+    #velocity:int=5
     color:tuple = (0,0,255)
+    body = []
+    tail = None
+    old_tail = None
 
     def __post_init__(self):
-        self.has_collided=False
-        self.body = []
-        self.tail = None
-        self.old_tail = None
+        self.cell_gap = self.cell_size*2.2
         self.head = self.make_new_cell(x=self.starting_position[0],
                             y=self.starting_position[1])
         
         self.body.append(self.head) #last cell in body is always head
-        #define all four boundaries relative to the center coordinates of sneak's cell
 
     def make_new_cell(self, x, y, size=None, color=None):
-        if size == None: size = self.cell_size
-        if color == None: color = self.color
-        new_cell = UnitCell(x=x,
-                                y=y,
-                                size=size,
-                                color=color)
+        if size == None:
+            size = self.cell_size
+        if color == None:
+            color = self.color
+        new_cell = UnitCell(x=x, y=y, size=size, color=color)
+
         return new_cell
 
     def add_new_cell_to_head(self,cell:UnitCell):
         """
         Increase the size of the snake by adding cells
         """
-        self.body.append(cell)
+        new_cell = self.make_new_cell(x=cell.x, y=cell.y)
+        self.body.append(new_cell)
         self.update_head()
 
 
@@ -90,14 +120,14 @@ class Snake:
         current_head = self.body[-1]
         new_x, new_y = current_head.position
         if direction == "left":
-            new_x -= self.velocity
+            new_x -= self.cell_gap 
         if direction == "right":
-            new_x += self.velocity
+            new_x += self.cell_gap 
         if direction == "up":
-            new_y -= self.velocity
+            new_y -= self.cell_gap 
         if direction == "down":
-            new_y+= self.velocity
-        #make and add new head and remove tail from body
+            new_y+= self.cell_gap 
+        #transition from existing head to new cell in the moving direction
         new_head = self.make_new_cell(x=new_x, y=new_y,)
         self.body.append(new_head)
         self.old_tail = self.body.pop(0)
