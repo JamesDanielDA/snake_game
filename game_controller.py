@@ -20,12 +20,11 @@ class GameController:
     mainloop_delay:float = 0.3
     running:bool =True
     food_score:int = 10
-    current_level_score:int = 0
-    prev_level_score:int = 0
-    total_score:int = 0
+    score = {'total':0, 1:0}
     game_level:int = 1
     max_level_score:int = 10
     level_speed_factor:float = 1.0
+    next_level_ok:bool = True
 
     def __post_init__(self) -> None:
 
@@ -132,30 +131,24 @@ class GameController:
 
     def enter_next_level(self) -> None:
         """
-        Should only be called when a game_leve is completed ie. score == multiples of max_level_score
-        Determines whther to move to the next level and decreases the delay time of the mainloop accordingly
-        :param score: the current score
-        :return: None if player doesn't want to go to next level
+        Increases snake speed, informs player about the next level
         """
-        self.mainloop_delay /= self.level_speed_factor * self.game_level
         continue_game = messagebox.askquestion(title='Next Level',message= f'Well Done! \n\n Enter Level {int(self.game_level+1)}')
         if continue_game == "yes":
+            self.mainloop_delay /= self.level_speed_factor * self.game_level
             self.game_level += 1
-            self.prev_level_score += self.current_level_score
-            self.current_level_score = 0    
-            #self.snake.reset()
-            #self.throw_new_food()
-            self.window.display_scoreboard(self.total_score, self.game_level)
+            self.score[self.game_level] = 0
             self.running = True
         else:
-            self.should_continue(msg = "Continue current level?")
+            #self.should_continue(msg = "Continue current level?")
+            self.next_level_ok = False
 
-    def calculate_score(self) -> None:
+    def increment_score(self) -> None:
         """
-        Call this function when snake's body size increases
+        Call this function when snake's body adds a cell
         """
-        self.current_level_score = (len(self.snake.body)-1)*self.food_score
-        self.total_score = self.current_level_score + self.prev_level_score
+        self.score[self.game_level] += self.food_score
+        self.score['total'] += self.food_score
 
     async def mainloop(self) -> None:
         
@@ -195,7 +188,7 @@ class GameController:
                 # self.window.display_scoreboard(score=self.total_score, level=self.game_level)
 
                 #draw game objects on the screen
-                self.window.display_scoreboard(score=self.total_score, level=self.game_level)
+                self.window.display_scoreboard(score=self.score['total'], level=self.game_level)
                 self.draw_current_food()
                 for cell in self.snake.body:
                     pygame.draw.rect(self.screen, cell.color, cell.rect)
@@ -204,9 +197,9 @@ class GameController:
                 eaten_food = self.gamerules.eaten_food(self.food)
                 if eaten_food:
                     self.snake.add_new_cell_to_head(eaten_food)
-                    self.calculate_score()
+                    self.increment_score()
                     self.throw_new_food()
-                self.window.display_scoreboard(score=self.total_score, level=self.game_level)
+                self.window.display_scoreboard(score=self.score['total'], level=self.game_level)
                 
                 pygame.display.update()
 
@@ -215,9 +208,10 @@ class GameController:
                 if violation != None:
                     self.should_continue(msg=violation)
 
-                #check if current level is completed
-                if self.gamerules.check_level_completed(score=self.current_level_score, 
-                                                    max_level_score=self.max_level_score):
-                    self.enter_next_level()
+                #check if current level is completed, if player wants to go to next level
+                if self.next_level_ok:
+                    if self.gamerules.check_level_completed(score=self.score[self.game_level], 
+                                                        max_level_score=self.max_level_score):
+                        self.enter_next_level()
 
                 await asyncio.sleep(self.mainloop_delay)
