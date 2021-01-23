@@ -3,7 +3,10 @@ import copy
 import pygame
 from dataclasses import dataclass, field
 from time import sleep
+from logger import GameLogger
 
+
+log = GameLogger(file_dunder_name=__name__)
 
 @dataclass
 class GameWindow:
@@ -18,10 +21,11 @@ class GameWindow:
     screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 
     pygame.font.init()
+    pygame.display.set_caption('Snake Game')
     msg_font = pygame.font.SysFont("Comic Sans MS", 20)
     score_font = pygame.font.SysFont('Raleway', 20, bold=True)
     
-    def display_text(self, text, position = None, color=None , font_type=None):
+    def display_text(self, text:str, position:tuple = None, color:tuple=None , font_type:'pygame.font'=None) -> None:
         """
         call this funtion to write a text on the game window
         """
@@ -35,15 +39,22 @@ class GameWindow:
         label = font_type.render(text, 1, color)
         self.screen.blit(label, position)
 
-    def display_score(self,score):
+    def display_scoreboard(self,score:int, level:int) -> None:
         """
-        A simple text displayed on any one corner of the game window
+        Display texts to show current score and level
+        :param score: the current score of the game
+        :param level: the current level of the game
         """
-        x = self.SCREEN_WIDTH - 100
+        score_x = self.SCREEN_WIDTH - 100
         y = 10
-        position = (x,y)
+        score_position = (score_x,y)
         score_text = 'Score : ' + str(score)
-        self.display_text(score_text, position=position,font_type = self.score_font)
+        level_x = 10
+        level_position = (level_x,y)
+        level_text = 'Level : ' + str(level)
+
+        self.display_text(score_text, position=score_position,font_type = self.score_font)
+        self.display_text(level_text, position=level_position,font_type = self.score_font)
 
 
 
@@ -57,7 +68,7 @@ class UnitCell:
     size:int
     color:tuple = (0,0,255)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.position = [self.x, self.y]
         self.rect = pygame.Rect((self.position ), (self.size*2, self.size*2))
         self.rect.center = (self.position )
@@ -67,7 +78,7 @@ class Food(UnitCell):
     """
     Food extends UnitCell and positions on the game window randomly
     """
-    def __init__(self,x,y,size = 5,food_color=(255,0,0)):
+    def __init__(self,x,y,size = 5,food_color=(255,0,0)) -> None:
         super().__init__(x=x, y=y, size = size, color=food_color)
 
 @dataclass
@@ -85,7 +96,7 @@ class Snake:
     tail = None
     old_tail = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.cell_gap = self.cell_size*2.2
         self.head = self.make_new_cell(x=self.starting_position[0],
                             y=self.starting_position[1])
@@ -101,7 +112,7 @@ class Snake:
 
         return new_cell
 
-    def add_new_cell_to_head(self,cell:UnitCell):
+    def add_new_cell_to_head(self,cell:'UnitCell') -> None:
         """
         Increase the size of the snake by adding cells
         """
@@ -110,11 +121,11 @@ class Snake:
         self.update_head()
 
 
-    def update_head(self):
+    def update_head(self) -> None:
         self.head = self.body[-1]
 
 
-    def move(self, direction):
+    def move(self, direction) -> None:
         self.moving_direction = direction
         # create a new cell in the moving direction and attacht it to the body
         current_head = self.body[-1]
@@ -134,7 +145,7 @@ class Snake:
         self.tail = self.body[0]
         self.update_head()
 
-    def reset(self):
+    def reset(self) -> None:
         """
         reset will destroy body and move the head to starting position
         """

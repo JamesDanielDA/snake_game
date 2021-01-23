@@ -2,19 +2,23 @@
 
 from dataclasses import dataclass
 from math import hypot
+from logger import GameLogger
+
+
+log = GameLogger(file_dunder_name=__name__)
 
 @dataclass
 class GameRules:
     snake:object
     window:object
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.boundaries = {"left"   : 0 + self.snake.cell_size,
                             "right" : self.window.SCREEN_WIDTH - self.snake.cell_size,
                             "up"    : 0 + self.snake.cell_size,
                             "down"  : self.window.SCREEN_HEIGHT - self.snake.cell_size}
     
-    def hit_a_wall(self):
+    def hit_a_wall(self) -> bool:
         """
         Check if snake's head has hit any of the four walls
         """
@@ -30,20 +34,7 @@ class GameRules:
 
         return False
 
-    def self_bitten__(self):
-        """
-        check if the head has come close enough to any of its body cells
-        """
-        safe_length = 4
-        if len(self.snake.body) <= safe_length:
-            return False
-
-        for cell in self.snake.body[0: len(self.snake.body)- safe_length]:
-            bite_distance = hypot(self.snake.head.x - cell.x,  self.snake.head.y - cell.y)
-            if bite_distance <= self.snake.cell_gap:
-                return True
-
-    def self_bitten(self):
+    def self_bitten(self) -> bool:
         """
         check if the head has come close enough to any of its body cells
         """
@@ -55,7 +46,7 @@ class GameRules:
                     return True
         return False
 
-    def eaten_food(self,food):
+    def eaten_food(self,food:object) -> object:
         """
         check if head of snake collides with food
         """
@@ -63,4 +54,13 @@ class GameRules:
         if head.rect.colliderect(food.rect):
             return food
         return None
+
+    def check_level_completed(self,score:int, max_level_score:int) -> bool:
+        """
+        checks if a level is completed by comparing score against max_level_score
+        """
+        if score == max_level_score:
+            return True
+        return False
+
 

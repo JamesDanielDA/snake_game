@@ -1,3 +1,4 @@
 snake-env
 .vscode
 __pycache__
+/logs
