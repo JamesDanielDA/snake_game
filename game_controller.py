@@ -1,5 +1,6 @@
 import pygame
 import random
+import sys
 from tkinter import *
 from tkinter import messagebox
 from dataclasses import dataclass, field

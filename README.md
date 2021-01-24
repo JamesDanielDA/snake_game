@@ -4,23 +4,18 @@ Snake Game is a simple python project  developed for a test
 
 ## Requrements
 
-Operating System : Linux , Windows
-Python 3.x (if running as a package)
+Operating System : Linux 
+Python = 3.x
+pygame==2.0.1
 
 ## Installation
 
-There are two ways to run this package
-
-## 1. Run the executable file
-Simply download the executable file and run it by double clicking.
-Make sure to change the permission of file to run as an executable after downloading
-
-## 2. Fork This Repository
-a. Fork this repository. Forking it will make it availible in your github account.
+## Fork This Repository
+a. Fork this repository. Forking it will make it availible in your github account. An alternative is to download the repository as zip folder
 
 b. After forking clone the repository to your computer
 
-c. Create a virtual environmnet in your project folder and install the requirements
+c. Install pygame (typically in a  virtual environment) if not installed in you computer
 
 d. From inside the root directory run 'main.py'
 

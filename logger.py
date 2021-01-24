@@ -15,7 +15,7 @@ class GameLogger:
         self.formatter = logging.Formatter("%(asctime)s: %(name)s: %(message)s")
 
         if file_handler_name == None:
-            file_handler_name = 'logs/' + file_dunder_name + '.log'
+            file_handler_name = file_dunder_name + '.log'
         self.file_handler = logging.FileHandler(file_handler_name)
         self.file_handler.setFormatter(self.formatter)
         self.logger.addHandler(self.file_handler)
