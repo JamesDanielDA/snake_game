@@ -1,9 +1,8 @@
 import random
-import copy
 import pygame
 from dataclasses import dataclass, field
-from time import sleep
 from logger import GameLogger
+from icons import icon_dict
 
 
 log = GameLogger(file_dunder_name=__name__)
@@ -17,13 +16,88 @@ class GameWindow:
     
     SCREEN_WIDTH:int = 500
     SCREEN_HEIGHT:int = 500
-    BG_COLOR:tuple = (255,255,255)
-    screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
+    BG_COLOR:tuple = (200,200,200)
+    panel_height = 40
 
-    pygame.font.init()
-    pygame.display.set_caption('Snake Game')
-    msg_font = pygame.font.SysFont("Comic Sans MS", 20)
-    score_font = pygame.font.SysFont('Raleway', 20, bold=True)
+    def __post_init__(self):
+        self.screen= pygame.display.set_mode([self.SCREEN_WIDTH, self.SCREEN_HEIGHT + self.panel_height])
+        self.surface= pygame.Surface((self.SCREEN_WIDTH, self.SCREEN_HEIGHT + self.panel_height))
+        self.surface.fill(self.BG_COLOR)
+        #self.surface.set_alpha(0)
+
+        pygame.font.init()
+        self.msg_font = pygame.font.SysFont("Comic Sans MS", 20)
+        self.score_font = pygame.font.SysFont('Raleway', 20, bold=True)
+        pygame.display.set_caption('Snake Game')
+
+        self.add_panel()
+        self.add_border()
+    
+    def render_background(self, image:pygame.Surface):
+        self.surface.fill(self.BG_COLOR)
+        self.surface.blit(image,(0,0))
+        self.add_panel()
+        self.add_border()
+    
+    def add_border(self):
+        color = (135, 62, 35)
+        thickness = 3
+        vertical_size = (thickness,self.SCREEN_HEIGHT)
+        horizontal_size = (self.SCREEN_WIDTH,thickness)
+        left_pos, right_pos = (0,0) , (self.SCREEN_WIDTH-thickness, 0)
+        top_pos, bottom_pos = (0,0), (0,self.SCREEN_HEIGHT-thickness)
+        
+        border_left = pygame.Rect(left_pos, vertical_size)
+        border_right = pygame.Rect(right_pos, vertical_size)
+        border_top = pygame.Rect(top_pos, horizontal_size)
+        border_bottom = pygame.Rect(bottom_pos,horizontal_size)
+
+        for border in [border_left,border_right,border_top,border_bottom]:
+            pygame.draw.rect(self.surface, color, border)
+    
+    def add_panel(self) -> None:
+        """
+        add a panel to window to place buttons or other rectangles serving as features
+        """
+        panel_color = (6, 57, 112)
+        panel_position = (0,self.SCREEN_HEIGHT)
+        self.panel = pygame.Surface((self.SCREEN_WIDTH, self.panel_height))
+        self.panel.fill(panel_color)
+        icon_count = len(icon_dict)
+        icon_width = self.SCREEN_WIDTH / icon_count
+        icon_height = self.panel_height
+        icon_surface_list = self.get_icon_surfaces(icon_count=icon_count, icon_width=icon_width, icon_height=icon_height)
+        x,y=0,0
+        
+        #attach each image in the icon_dict to icon_surface, and update dict with corresponding rect of icon_surface
+        for icon_surface, icon_name in zip(icon_surface_list,icon_dict.keys()):
+            img_scaled = pygame.transform.scale(icon_dict[icon_name][0], icon_surface.get_size())
+            icon_surface.blit(img_scaled,(0,0))
+            self.panel.blit(icon_surface,(x,y))
+
+            #add this rect to icon_dict to map each img position to its surface
+            icon_rect = pygame.Rect(x,self.SCREEN_HEIGHT,icon_width, icon_height)
+            icon_dict[icon_name].append(icon_rect)
+
+            x += icon_width+2
+
+        self.surface.blit(self.panel, panel_position)
+    
+    def get_icon_surfaces(self, icon_count, icon_width, icon_height):
+        """
+        add surface on the panel for each icon
+        :param icon_count: the count of icons to be present on the panel
+        """
+        icon_color = (178,132,190)
+        
+        icon_surface_list = []
+        for _ in range(icon_count):
+            icon_surface = pygame.Surface((icon_width, icon_height ))
+            icon_surface.fill(icon_color)
+            icon_surface_list.append(icon_surface)
+        #pygame.draw.rect(icon_surface, icon_color, (0,0,icon_width,icon_height), 2)
+        return icon_surface_list
+
     
     def display_text(self, text:str, position:tuple = None, color:tuple=None , font_type:'pygame.font'=None) -> None:
         """
@@ -56,6 +130,8 @@ class GameWindow:
         self.display_text(score_text, position=score_position,font_type = self.score_font)
         self.display_text(level_text, position=level_position,font_type = self.score_font)
 
+    
+
 
 
 @dataclass
@@ -80,6 +156,7 @@ class Food(UnitCell):
     """
     def __init__(self,x,y,size = 5,food_color=(255,0,0)) -> None:
         super().__init__(x=x, y=y, size = size, color=food_color)
+        self.icon:'an image' = None
 
 @dataclass
 class Snake:

@@ -13,10 +13,11 @@ class GameRules:
     window:object
 
     def __post_init__(self) -> None:
-        self.boundaries = {"left"   : 0 + self.snake.cell_size,
-                            "right" : self.window.SCREEN_WIDTH - self.snake.cell_size,
-                            "up"    : 0 + self.snake.cell_size,
-                            "down"  : self.window.SCREEN_HEIGHT - self.snake.cell_size}
+        hit_offset = self.snake.cell_size + 1
+        self.boundaries = {"left"   : 0 + hit_offset,
+                            "right" : self.window.SCREEN_WIDTH - hit_offset,
+                            "up"    : 0 + hit_offset,
+                            "down"  : self.window.SCREEN_HEIGHT - hit_offset}
     
     def hit_a_wall(self) -> bool:
         """

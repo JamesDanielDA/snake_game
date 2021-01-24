@@ -4,7 +4,8 @@ from tkinter import *
 from tkinter import messagebox
 from dataclasses import dataclass, field
 import asyncio
-from game_objects import Snake, Food, GameWindow
+from game_objects import Snake, Food, GameWindow, icon_dict
+from icons import backgrounds
 from game_rules import GameRules
 from logger import GameLogger
 
@@ -16,13 +17,14 @@ class GameController:
     This class controlls the movements of game objects, checks for game rules and follows player commands
     """
     input_queue:list = field(default_factory=list)
+    mouse_clicks:list = field(default_factory=list)
     input_listener_delay:float = .01
     mainloop_delay:float = 0.3
     running:bool =True
     food_score:int = 10
     score = {'total':0, 1:0}
     game_level:int = 1
-    max_level_score:int = 10
+    max_level_score:int = 50
     level_speed_factor:float = 1.0
     next_level_ok:bool = True
 
@@ -98,11 +100,21 @@ class GameController:
 
         """
         while True:
+
+            
             for event in pygame.event.get():
+
+                #listen to quit request
                 if event.type == pygame.QUIT:
                     self.input_queue.append('quit')
                     return
                 
+                #listen to mouse clicks
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    x, y = event.pos
+                    self.mouse_clicks.append((x,y))
+
+                #listen to keypress events
                 if event.type == pygame.KEYDOWN and event.key in self.commands:
                     if event.key == pygame.K_SPACE:
                         if self.paused:
@@ -127,7 +139,10 @@ class GameController:
         """
         Call this funtion before snake is drawn so that snake will appear on top of food
         """
-        pygame.draw.circle(self.screen, self.food.color, self.food.position, self.food.size)
+        if self.food.icon == None:
+            pygame.draw.circle(self.screen, self.food.color, self.food.position, self.food.size)
+        else:
+            self.window.surface.blit(self.food.icon, self.food.position)
 
     def enter_next_level(self) -> None:
         """
@@ -150,6 +165,14 @@ class GameController:
         self.score[self.game_level] += self.food_score
         self.score['total'] += self.food_score
 
+    def select_feature(self,feature):
+        if feature in backgrounds:
+            self.window.render_background(icon_dict[feature][0])
+        
+        elif feature in food_icons:
+            self.food.icon = icon_dict[feature][0]
+
+
     async def mainloop(self) -> None:
         
         # Display the initial state of the game
@@ -162,6 +185,16 @@ class GameController:
         while self.running:
             if 'quit' in self.input_queue:
                     self.quit_game()
+            
+            #check if player has clicked to select a new feature
+            for click in self.mouse_clicks:
+                for icon_name, img_pair in icon_dict.items():
+                    if img_pair[1].collidepoint(click):
+                        self.select_feature(feature=icon_name)
+                        
+                self.mouse_clicks.remove(click)
+
+            
             
             if self.paused:
                 self.window.display_text(text='Game Paused. Press spacebar to resume game.')
@@ -188,6 +221,7 @@ class GameController:
                 # self.window.display_scoreboard(score=self.total_score, level=self.game_level)
 
                 #draw game objects on the screen
+                self.screen.blit(self.window.surface,(0,0))
                 self.window.display_scoreboard(score=self.score['total'], level=self.game_level)
                 self.draw_current_food()
                 for cell in self.snake.body:
@@ -206,6 +240,7 @@ class GameController:
                 # After this move, check if all the rules have been met
                 violation = self.check_for_rule_violation()
                 if violation != None:
+                    log.logger.info('hit on wall at ',self.snake.head.position)
                     self.should_continue(msg=violation)
 
                 #check if current level is completed, if player wants to go to next level
