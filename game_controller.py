@@ -15,6 +15,7 @@ log = GameLogger(file_dunder_name = __name__)
 class GameController:
     """
     This class controlls the movements of game objects, checks for game rules and follows player commands
+
     """
     input_queue:list = field(default_factory=list)
     mouse_clicks:list = field(default_factory=list)
@@ -30,7 +31,7 @@ class GameController:
 
     def __post_init__(self) -> None:
 
-        #create game window
+        #create main game window
         self.window = GameWindow()
         self.screen = self.window.screen
 
@@ -57,6 +58,8 @@ class GameController:
                             pygame.K_RIGHT:'right',
                             pygame.K_SPACE: 'pause'}
 
+        log.logger.info('Game Controller initialized')
+    
     def quit_game(self) -> None:
         log.logger.info('Exiting the game')
         pygame.quit()
@@ -65,6 +68,10 @@ class GameController:
     def should_continue(self, msg:str, testing:bool=False) -> None:
         """
         Once the player loses, call this method to start from beginning
+        :param msg : The yes/no question to be shown to the player
+        :param testing: unit testing flag
+        :returns : None
+
         """
         
         if not testing:
@@ -77,19 +84,25 @@ class GameController:
             self.throw_new_food()
             self.running = True
         else:
+            log.logger.info('Player choosed to quit')
             self.quit_game()
 
     def check_for_rule_violation(self) -> str:
         """
         After each movement of the snake check if any rule is violated
+        :returns : str/None
         """
         # check if the snake hit a wall
         if self.gamerules.hit_a_wall():
-            return "Snake hit on the Wall! \n\n Do you wish to continue?"
+            rule = 'Snake hit on the Wall!'
+            log.logger.info(rule)
+            return  rule + '\n\n Do you wish to continue?'
 
         # check if snake has bitten itself
         if self.gamerules.self_bitten():
-            return "Snake has bitten itself!  \n\n Do you wish to continue?"
+            rule = 'Snake has bitten itself!'
+            log.logger.info(rule)
+            return rule + '\n\n Do you wish to continue?'
 
         return None
 
@@ -97,10 +110,10 @@ class GameController:
     async def input_handler(self) -> None:
         """
         asynchronous method to listen to keyboard inputs and store it as a list
-
+        :returns : None
         """
+        log.logger.info('input_handler started')
         while True:
-
             
             for event in pygame.event.get():
 
@@ -126,10 +139,13 @@ class GameController:
                     else:
                         self.input_queue.append(event.key)
             await asyncio.sleep(self.input_listener_delay)
+        log.logger.info('input_handler stoped')
+        
     
     def throw_new_food(self) -> None:
         """ 
         call this function to throw new food after snake eats the current food
+        :returns : None
         """
         self.food = Food(x=self.randx(), y=self.randy())
         pygame.draw.circle(self.screen, self.food.color, self.food.position, self.food.size)
@@ -138,6 +154,7 @@ class GameController:
     def draw_current_food(self) -> None:
         """
         Call this funtion before snake is drawn so that snake will appear on top of food
+        :returns : None
         """
         if self.food.icon == None:
             pygame.draw.circle(self.screen, self.food.color, self.food.position, self.food.size)
@@ -147,6 +164,7 @@ class GameController:
     def enter_next_level(self) -> None:
         """
         Increases snake speed, informs player about the next level
+        :returns : None
         """
         continue_game = messagebox.askquestion(title='Next Level',message= f'Well Done! \n\n Enter Level {int(self.game_level+1)}')
         if continue_game == "yes":
@@ -155,12 +173,13 @@ class GameController:
             self.score[self.game_level] = 0
             self.running = True
         else:
-            #self.should_continue(msg = "Continue current level?")
             self.next_level_ok = False
+            log.logger.info(f'Player chooses to continue in level {self.game_level}')
 
     def increment_score(self) -> None:
         """
         Call this function when snake's body adds a cell
+        :returns : None
         """
         self.score[self.game_level] += self.food_score
         self.score['total'] += self.food_score
@@ -172,15 +191,20 @@ class GameController:
         elif feature in food_icons:
             self.food.icon = icon_dict[feature][0]
 
-
     async def mainloop(self) -> None:
+        """
+        Asychronous function that keeps updating the game window with the latest state
+        :returns : None
+        """
+
         
         # Display the initial state of the game
         self.screen.fill(self.window.BG_COLOR)
+        self.window.display_text(text='Use arrow keys to change direction of the snake', rel_pos=(5,2))
         self.throw_new_food()
         command = pygame.K_RIGHT #default command
         
-        self.paused = False
+        self.paused = True
 
         while self.running:
             if 'quit' in self.input_queue:
@@ -193,8 +217,6 @@ class GameController:
                         self.select_feature(feature=icon_name)
                         
                 self.mouse_clicks.remove(click)
-
-            
             
             if self.paused:
                 self.window.display_text(text='Game Paused. Press spacebar to resume game.')

@@ -2,7 +2,6 @@ import game_controller
 import asyncio
 
 
-
 async def main():
     game =  game_controller.GameController()
     task1 = asyncio.create_task(game.input_handler())

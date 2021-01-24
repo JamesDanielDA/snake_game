@@ -10,8 +10,11 @@ log = GameLogger(file_dunder_name=__name__)
 @dataclass
 class GameWindow:
     """
-    Create an object of this class to put a snake
-    The look and feel of the game window is decided by this class
+    Create an object of this class to display the main game window
+    :param SCREEN_WIDTH (int)           : width of the game window
+    :param SCREEN_HEIGHT (int)          : height of the game window
+    :param BG_COLOR (tuple[int,int,int]): background color of the main window
+    :param panel_height (int)           : height of the panel that will appear on the bottom of the game window
     """
     
     SCREEN_WIDTH:int = 500
@@ -19,8 +22,8 @@ class GameWindow:
     BG_COLOR:tuple = (200,200,200)
     panel_height = 40
 
-    def __post_init__(self):
-        self.screen= pygame.display.set_mode([self.SCREEN_WIDTH, self.SCREEN_HEIGHT + self.panel_height])
+    def __post_init__(self) -> None:
+        self.screen = pygame.display.set_mode([self.SCREEN_WIDTH, self.SCREEN_HEIGHT + self.panel_height])
         self.surface= pygame.Surface((self.SCREEN_WIDTH, self.SCREEN_HEIGHT + self.panel_height))
         self.surface.fill(self.BG_COLOR)
         #self.surface.set_alpha(0)
@@ -32,14 +35,26 @@ class GameWindow:
 
         self.add_panel()
         self.add_border()
+        log.logger.info(f'Created GameWindow:  {self.__dict__}')
     
-    def render_background(self, image:pygame.Surface):
+    def render_background(self, image:pygame.Surface)-> None:
+        """
+        Callback function for the features on the bottom of the game window
+        :param image (pygame.Surface) : this image will be set as the new background
+        :return : None
+        """
+
         self.surface.fill(self.BG_COLOR)
         self.surface.blit(image,(0,0))
         self.add_panel()
         self.add_border()
     
-    def add_border(self):
+    def add_border(self)-> None:
+        """
+        Adds four boarders on the four sides of the window surface
+        :return : None
+        """
+
         color = (135, 62, 35)
         thickness = 3
         vertical_size = (thickness,self.SCREEN_HEIGHT)
@@ -57,7 +72,7 @@ class GameWindow:
     
     def add_panel(self) -> None:
         """
-        add a panel to window to place buttons or other rectangles serving as features
+        A panel (pygame.Surface) to hold icons that serve as features
         """
         panel_color = (6, 57, 112)
         panel_position = (0,self.SCREEN_HEIGHT)
@@ -83,10 +98,13 @@ class GameWindow:
 
         self.surface.blit(self.panel, panel_position)
     
-    def get_icon_surfaces(self, icon_count, icon_width, icon_height):
+    def get_icon_surfaces(self, icon_count:int, icon_width:int, icon_height:int)-> list:
         """
-        add surface on the panel for each icon
-        :param icon_count: the count of icons to be present on the panel
+        Add surface on the panel for each icon
+        :param icon_count   : the count of icons to be present on the panel
+        :param icon_width   : width of each icon that will be placed on panel
+        :param icon_height  : height of each icon
+        :return (list)      : list of objects(pygame.Surface)
         """
         icon_color = (178,132,190)
         
@@ -99,12 +117,23 @@ class GameWindow:
         return icon_surface_list
 
     
-    def display_text(self, text:str, position:tuple = None, color:tuple=None , font_type:'pygame.font'=None) -> None:
+    def display_text(self, text:str, position:tuple = None, rel_pos:tuple = None, 
+                        color:tuple=None , font_type:'pygame.font'=None) -> None:
         """
-        call this funtion to write a text on the game window
+        Call this funtion to write a text on the game window
+        :param text (str)       : The text to be displayed on the game window
+        :param position (tuple) : the (x,y) coordinates where the text will be placed
+        :param rel_pos (tuple(int, int))  : relative position on the window for the text
+        :param color (tuple)    : rgb value of text
+        :param font_type (font) : font of the text
+        :return                 : None 
         """
         if position == None:
-            position = (self.SCREEN_WIDTH/4, self.SCREEN_HEIGHT/4)
+            if rel_pos == None:
+                position = (self.SCREEN_WIDTH/5, self.SCREEN_HEIGHT/4)
+            else:
+                position = (self.SCREEN_WIDTH/rel_pos[0], self.SCREEN_HEIGHT/rel_pos[1])
+
         if color == None:
             color = (100,100,100)
         if font_type == None:
@@ -118,6 +147,7 @@ class GameWindow:
         Display texts to show current score and level
         :param score: the current score of the game
         :param level: the current level of the game
+        :return : None
         """
         score_x = self.SCREEN_WIDTH - 100
         y = 10
@@ -130,14 +160,17 @@ class GameWindow:
         self.display_text(score_text, position=score_position,font_type = self.score_font)
         self.display_text(level_text, position=level_position,font_type = self.score_font)
 
-    
-
 
 
 @dataclass
 class UnitCell:
     """
-    A single cell that can be used both as food and snake's body
+    A single cell (a squre) that can be used both as food and snake's body
+    :param x (int)          : x coordinate of the cell
+    :param y (int)          : y coordinate of the cell
+    :param size (int)       : this will be the side of the square
+    :param color (tuple)    : rgb value of the cell
+    :return : None
     """
     x:int
     y:int
@@ -158,16 +191,18 @@ class Food(UnitCell):
         super().__init__(x=x, y=y, size = size, color=food_color)
         self.icon:'an image' = None
 
+
 @dataclass
 class Snake:
     """
-    Object of class Snake can be created and put on a pygame window
-    Snake is made up of new cells (UnitCell) and stored in an array
+    Snake is made up of one or more UnitCell
+    :param starting_position (tuple) : (x,y) coordinates for the starting position of the snake
+    :param cell_size (int)          : size of each square that the snake is made up of
+    :param color (tuple)            : color of snake in rgb
+    :return                         : None
     """
     starting_position:tuple
     cell_size:int=5
-    moving_direction:str = 'right'
-    #velocity:int=5
     color:tuple = (0,0,255)
     body = []
     tail = None
@@ -175,34 +210,37 @@ class Snake:
 
     def __post_init__(self) -> None:
         self.cell_gap = self.cell_size*2.2
-        self.head = self.make_new_cell(x=self.starting_position[0],
-                            y=self.starting_position[1])
+        self.head = UnitCell(x=self.starting_position[0],
+                            y=self.starting_position[1], size=self.cell_size)
         
         self.body.append(self.head) #last cell in body is always head
+        log.logger.info(f'Created a snake {self.__dict__}')
 
-    def make_new_cell(self, x, y, size=None, color=None):
-        if size == None:
-            size = self.cell_size
-        if color == None:
-            color = self.color
-        new_cell = UnitCell(x=x, y=y, size=size, color=color)
-
-        return new_cell
-
-    def add_new_cell_to_head(self,cell:'UnitCell') -> None:
+    def add_new_cell_to_head(self,cell:UnitCell) -> None:
         """
         Increase the size of the snake by adding cells
+        :param cell (UnitCell)  : an instance of UnitCell
+        :return                 : None
         """
-        new_cell = self.make_new_cell(x=cell.x, y=cell.y)
+        new_cell = UnitCell(x=cell.x, y=cell.y, size=self.cell_size)
         self.body.append(new_cell)
         self.update_head()
 
-
     def update_head(self) -> None:
+        """
+        Updates the current head as the newly added UnitCell
+        :return : None
+        """
         self.head = self.body[-1]
 
 
-    def move(self, direction) -> None:
+    def move(self, direction:str) -> None:
+        """
+        Finds (x,y) position of the next UnitCell to be added to the snake
+        :param direction (str)  : the direction in which to find the next head
+        :return                 : None
+        """
+
         self.moving_direction = direction
         # create a new cell in the moving direction and attacht it to the body
         current_head = self.body[-1]
@@ -216,7 +254,7 @@ class Snake:
         if direction == "down":
             new_y+= self.cell_gap 
         #transition from existing head to new cell in the moving direction
-        new_head = self.make_new_cell(x=new_x, y=new_y,)
+        new_head = UnitCell(x=new_x, y=new_y,size=self.cell_size)
         self.body.append(new_head)
         self.old_tail = self.body.pop(0)
         self.tail = self.body[0]
@@ -225,6 +263,7 @@ class Snake:
     def reset(self) -> None:
         """
         reset will destroy body and move the head to starting position
+        :return : None
         """
         self.body = []
         self.__post_init__()

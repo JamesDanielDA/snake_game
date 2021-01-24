@@ -5,10 +5,17 @@ from math import hypot
 from logger import GameLogger
 
 
-log = GameLogger(file_dunder_name=__name__)
+#log = GameLogger(file_dunder_name=__name__)
 
 @dataclass
 class GameRules:
+    """
+    A class that detemines if the rules the player/snake has met the rules of the game
+    :param snake (Snake)    : the snake object created for the game
+    :param window (GameWindow) : the instance of GameWindow
+    :return : None
+    """
+
     snake:object
     window:object
 
@@ -22,7 +29,9 @@ class GameRules:
     def hit_a_wall(self) -> bool:
         """
         Check if snake's head has hit any of the four walls
+        :return (bool)
         """
+
         snake = self.snake
         if snake.moving_direction == "left" and snake.head.x <= self.boundaries["left"]:
             return True
@@ -38,7 +47,9 @@ class GameRules:
     def self_bitten(self) -> bool:
         """
         check if the head has come close enough to any of its body cells
+        :return (bool)
         """
+
         safe_length = 4
         head = self.snake.head
         if len(self.snake.body) > safe_length:
@@ -50,6 +61,8 @@ class GameRules:
     def eaten_food(self,food:object) -> object:
         """
         check if head of snake collides with food
+        :param food (Food)  : the Food object
+        :return (Food)      : None/Food
         """
         head = self.snake.head
         if head.rect.colliderect(food.rect):
@@ -59,6 +72,9 @@ class GameRules:
     def check_level_completed(self,score:int, max_level_score:int) -> bool:
         """
         checks if a level is completed by comparing score against max_level_score
+        :param score (int)          : the current score
+        :param max_level_score(int)  : max score allowed in the level
+        :return (bool) 
         """
         if score == max_level_score:
             return True

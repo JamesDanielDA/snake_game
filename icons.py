@@ -12,4 +12,3 @@ for i,img in enumerate(icon_images):
 
 backgrounds = list(icon_dict.keys())[0:4]
 #food_icons = list(icon_dict.keys())[4:]
-print(icon_dict['icon1'][0])
