@@ -4,13 +4,13 @@ Snake Game is a simple python project  developed for a test
 
 ## Requrements
 
-Operating System : Linux 
-Python = 3.x
+Operating System : Linux , 
+Python = 3.x  , 
 pygame==2.0.1
 
 ## Installation
 
-## Fork This Repository
+### Fork This Repository
 a. Fork this repository. Forking it will make it availible in your github account. An alternative is to download the repository as zip folder
 
 b. After forking clone the repository to your computer
@@ -26,11 +26,11 @@ Goal of the Game
 
 Achieve maximum score by eating food that appears randomly on the screen
 
-## Time Out if..
+### Time Out if..
 1. If the snake hits any of the four walls, the player fails that level
 2. The same rule is applied if snake bites any part of its own body
 
-## Score more 
+### Score more 
 1. Each time snake eats food score increases by 10
 2. In each level snake gets food five times.
 3. If a level is completed, the score upto that leve is retained
