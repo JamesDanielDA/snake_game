@@ -237,11 +237,6 @@ class GameController:
                 # move snake in the direction of player's command
                 direction = self.commands[command]
                 self.snake.move(direction)
-                
-                # #calculate scores
-                # self.current_level_score = (len(self.snake.body)-1)*self.food_score
-                # self.total_score = self.prev_level_score + self.current_level_score
-                # self.window.display_scoreboard(score=self.total_score, level=self.game_level)
 
                 #draw game objects on the screen
                 self.screen.blit(self.window.surface,(0,0))
