@@ -1,6 +1,6 @@
 # Snake Game
 
-Snake Game is a simple python project  developed for a test
+A simple snake game built to demonstrate coding skills
 
 ## Requrements
 
