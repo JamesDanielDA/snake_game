@@ -76,8 +76,6 @@ class GameRules:
         :param max_level_score(int)  : max score allowed in the level
         :return (bool) 
         """
-        if score == max_level_score:
-            return True
-        return False
+        return score == max_level_score:
 
 
